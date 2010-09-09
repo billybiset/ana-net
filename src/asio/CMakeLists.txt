@@ -29,6 +29,7 @@ ENDIF(NOT MSVC)
 set ( ana_headers ../api/ana.hpp
                   ../api/common.hpp
                   ../api/timers.hpp
+                  ../api/stats.hpp
                   ../api/buffers.hpp
                   ../api/predicates.hpp
                   ../api/binary_streams.hpp )
