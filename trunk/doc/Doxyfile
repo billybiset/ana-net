@@ -20,9 +20,9 @@ ALWAYS_DETAILED_SEC    = NO
 
 INLINE_INHERITED_MEMB  = YES
 
-FULL_PATH_NAMES        = YES
+FULL_PATH_NAMES        = NO
 
-STRIP_FROM_PATH        = src/ana/api
+STRIP_FROM_PATH        = ../src/api
 
 STRIP_FROM_INC_PATH    =
 
@@ -93,90 +93,62 @@ HIDE_IN_BODY_DOCS      = NO
 
 INTERNAL_DOCS          = NO
 
-
 CASE_SENSE_NAMES       = YES
-
 
 HIDE_SCOPE_NAMES       = NO
 
-
 SHOW_INCLUDE_FILES     = YES
-
 
 INLINE_INFO            = YES
 
-
 SORT_MEMBER_DOCS       = YES
-
 
 SORT_BRIEF_DOCS        = NO
 
-
 SORT_GROUP_NAMES       = NO
-
 
 SORT_BY_SCOPE_NAME     = NO
 
-
 GENERATE_TODOLIST      = YES
-
 
 GENERATE_TESTLIST      = YES
 
-
 GENERATE_BUGLIST       = YES
-
 
 GENERATE_DEPRECATEDLIST= YES
 
-
 ENABLED_SECTIONS       = 
-
 
 MAX_INITIALIZER_LINES  = 30
 
-
 SHOW_USED_FILES        = YES
-
 
 SHOW_DIRECTORIES       = NO
 
-
 SHOW_FILES             = YES
-
 
 SHOW_NAMESPACES        = YES
 
-
 FILE_VERSION_FILTER    = 
-
 
 LAYOUT_FILE            = 
 
 
-
 QUIET                  = NO
-
 
 WARNINGS               = YES
 
-
 WARN_IF_UNDOCUMENTED   = YES
-
 
 WARN_IF_DOC_ERROR      = YES
 
-
 WARN_NO_PARAMDOC       = NO
-
 
 WARN_FORMAT            = "$file:$line: $text"
 
-
 WARN_LOGFILE           = 
 
-INPUT                  = ../../src/ana/api
-
+INPUT                  = ../src/api
 
 INPUT_ENCODING         = UTF-8
 
