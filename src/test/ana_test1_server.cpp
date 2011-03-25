@@ -38,6 +38,8 @@ using namespace ana;
 
 const port DEFAULT_PORT = "30303";
 
+const size_t EXPECTED_SEND_OPERATIONS_PER_CLIENT = 2;
+
 class ChatServer : public listener_handler,
                    public send_handler,
                    public connection_handler
@@ -127,12 +129,7 @@ class ChatServer : public listener_handler,
                 {
                     ++completed_[client];
 
-                    if ( completed_[client] == 1 )
-                    {
-                        std::cout << "\nClient " << client << " PASSED " << std::endl;
-                    }
-                    else
-                        std::cout << ".";
+                    std::cout << "\nClient " << client << " PASSED operation number: " << completed_[client] << std::endl;
                 }
             }
             else

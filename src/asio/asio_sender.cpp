@@ -34,6 +34,27 @@
 
 #include "asio_sender.hpp"
 
+asio_sender::asio_sender() :
+    _sending( false ),
+    _sender_mutex(),
+    _send_queue()
+{
+}
+
+asio_sender::_send_operation::_send_operation( ana::detail::shared_buffer buffer ,
+                                               tcp::socket&               socket ,
+                                               ana::send_handler*         handler,
+                                               ana::detail::sender*       sender ,
+                                               ana::operation_id          op_id  ) :
+   buffer( buffer ),
+   socket( socket ),
+   handler( handler ),
+   sender( sender ),
+   op_id( op_id )
+{
+}
+
+
 void asio_sender::send(ana::detail::shared_buffer buffer ,
                        tcp::socket&               socket ,
                        ana::send_handler*         handler,
@@ -43,40 +64,52 @@ void asio_sender::send(ana::detail::shared_buffer buffer ,
     ana::timer* running_timer( NULL );
     try
     {
-        if ( sender->timeouts_enabled() )
+        boost::mutex::scoped_lock glock(_sender_mutex);
+
+        if ( ! _sending )
         {
-            running_timer = sender->create_timer();
+            _sending = true;
 
-            sender->start_timer( running_timer, buffer,
-                                boost::bind(&asio_sender::handle_send, this,
-                                            boost::asio::placeholders::error, handler,
-                                            running_timer, op_id, true ) );
-        }
+            if ( sender->timeouts_enabled() )
+            {
+                running_timer = sender->create_timer();
 
-        stats_collector().start_send_packet(  buffer->size()
-                                            + ( raw_mode() ? 0 : ana::HEADER_LENGTH ) );
+                sender->start_timer( running_timer, buffer,
+                                    boost::bind(&asio_sender::handle_send, this,
+                                                boost::asio::placeholders::error, handler,
+                                                running_timer, op_id, true ) );
+            }
 
-        if ( raw_mode() )
-        {
-            socket.async_write_some( boost::asio::buffer(buffer->base(), buffer->size() ),
-                                     boost::bind(&asio_sender::handle_partial_send,this,
-                                                 buffer, boost::asio::placeholders::error,
-                                                 &socket, handler, running_timer, 0, _2, op_id ));
+            stats_collector().start_send_packet(  buffer->size()
+                                                + ( raw_mode() ? 0 : ana::HEADER_LENGTH ) );
+
+            if ( raw_mode() )
+            {
+                socket.async_write_some( boost::asio::buffer(buffer->base(), buffer->size() ),
+                                         boost::bind(&asio_sender::handle_partial_send,this,
+                                                     buffer, boost::asio::placeholders::error,
+                                                     &socket, handler, running_timer, 0, _2, op_id ));
+            }
+            else
+            {
+                ana::ana_uint32 size( buffer->size() );
+                ana::host_to_network_long( size );
+
+                ana::serializer::bostream* output_stream = new ana::serializer::bostream();
+                (*output_stream) << size;
+
+                socket.async_write_some( boost::asio::buffer( output_stream->str() ),
+                                        boost::bind(&asio_sender::handle_sent_header,this,
+                                                    boost::asio::placeholders::error, output_stream,
+                                                    &socket, buffer,
+                                                    handler, running_timer, _2, op_id ));
+            }
         }
         else
         {
-            ana::ana_uint32 size( buffer->size() );
-            ana::host_to_network_long( size );
+            _send_operation oper(buffer,socket,handler,sender,op_id);
 
-            ana::serializer::bostream* output_stream = new ana::serializer::bostream();
-            (*output_stream) << size;
-
-            //write the header first in a separate operation, then send the full buffer
-            socket.async_write_some( boost::asio::buffer( output_stream->str() ),
-                                     boost::bind(&asio_sender::handle_sent_header,this,
-                                                 boost::asio::placeholders::error, output_stream,
-                                                 &socket, buffer,
-                                                 handler, running_timer, _2, op_id ));
+            _send_queue.push( oper );
         }
     }
     catch(std::exception& e)
@@ -85,7 +118,6 @@ void asio_sender::send(ana::detail::shared_buffer buffer ,
         delete running_timer;
     }
 }
-
 
 void asio_sender::handle_sent_header(const ana::error_code&      ec,
                                      ana::serializer::bostream*  bos,
@@ -129,7 +161,7 @@ void asio_sender::handle_partial_send( ana::detail::shared_buffer  buffer,
         {
             accumulated += last_msg_size;
 
-stats_collector().log_send( last_msg_size, accumulated == buffer->size() );
+            stats_collector().log_send( last_msg_size, accumulated == buffer->size() );
 
             if ( accumulated > buffer->size() )
                 throw std::runtime_error("The send operation was too large.");
@@ -168,6 +200,27 @@ void asio_sender::handle_send(const ana::error_code& ec,
 
         if ( ec )
             disconnect();
+    }
+
+    bool should_send_from_queue = false;
+
+    {
+        boost::mutex::scoped_lock glock( _sender_mutex );
+        _sending = false;
+
+        should_send_from_queue = ! ec && ! _send_queue.empty();
+    }
+
+    if ( should_send_from_queue )
+    {
+        _send_operation oper = _send_queue.front();
+
+        {
+            boost::mutex::scoped_lock glock( _sender_mutex );
+            _send_queue.pop();
+        }
+
+        send( oper.buffer, oper.socket, oper.handler, oper.sender, oper.op_id);
     }
 }
 

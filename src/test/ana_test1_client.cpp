@@ -40,6 +40,7 @@ const port DEFAULT_PORT = "30303";
 
 const char* const DEFAULT_ADDRESS = "127.0.0.1";
 
+const size_t SEND_OPERATIONS = 100;
 
 void show_help(char* const command)
 {
@@ -117,8 +118,10 @@ class ChatClient : public ana::listener_handler,
                     ss << c;
                 }
 
-                for ( size_t i = 0; i < 10000; ++i)
+                for ( size_t i = 0; i < SEND_OPERATIONS; ++i)
                 {
+                    std::string dbg = ss.str();
+
                     client_->send( ana::buffer( ss.str() ), this);
                 }
             }
@@ -126,6 +129,8 @@ class ChatClient : public ana::listener_handler,
             {
                 std::cerr << e.what() << std::endl;
             }
+
+            sleep(4);
 
             delete client_;
         }
