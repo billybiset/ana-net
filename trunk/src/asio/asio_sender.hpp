@@ -34,6 +34,9 @@
 #define ASIO_SENDER_HPP
 
 #include <boost/asio.hpp>
+#include <boost/thread/mutex.hpp>
+
+#include <queue>
 
 #include "../api/ana.hpp"
 
@@ -43,6 +46,8 @@ class asio_sender : private ana::detail::sender
 {
 
     public:
+        asio_sender();
+
         void send( ana::detail::shared_buffer,
                    tcp::socket&,
                    ana::send_handler*,
@@ -73,6 +78,26 @@ class asio_sender : private ana::detail::sender
                          ana::timer*,
                          ana::operation_id,
                          bool from_timeout = false);
+
+
+         struct _send_operation
+         {
+             _send_operation( ana::detail::shared_buffer,
+                               tcp::socket&,
+                               ana::send_handler*,
+                               ana::detail::sender*,
+                               ana::operation_id);
+
+            ana::detail::shared_buffer buffer;
+            tcp::socket&               socket;
+            ana::send_handler*         handler;
+            ana::detail::sender*       sender;
+            ana::operation_id          op_id;
+         };
+
+         bool _sending;
+         boost::mutex _sender_mutex;
+         std::queue<_send_operation> _send_queue;
 };
 
 #endif
