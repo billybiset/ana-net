@@ -83,6 +83,10 @@ void asio_client::run()
 {
     io_threads_.push_back(
                 new boost::thread( boost::bind( &boost::asio::io_service::run, &io_service_) ) );
+
+    //Temporary disable Nagle's Algorithm to avoid performance issues
+    boost::asio::ip::tcp::no_delay option(true);
+    socket_.set_option(option);
 }
 
 void asio_client::handle_proxy_connection(const boost::system::error_code& ec,

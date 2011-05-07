@@ -167,6 +167,10 @@ void asio_server::handle_accept(const boost::system::error_code& ec,
     }
 
     async_accept( handler );
+
+    //Temporary disable Nagle's Algorithm to avoid performance issues
+    boost::asio::ip::tcp::no_delay option(true);
+    client->socket().set_option(option);
 }
 
 
