@@ -36,7 +36,7 @@
 #include <boost/asio.hpp>
 #include <boost/thread/mutex.hpp>
 
-#include <queue>
+#include <list>
 
 #include "../api/ana.hpp"
 
@@ -53,6 +53,8 @@ class asio_sender : private ana::detail::sender
                    ana::send_handler*,
                    ana::detail::sender*,
                    ana::operation_id);
+
+        virtual ~asio_sender();
 
     private:
         void handle_sent_header(const boost::system::error_code& ec,
@@ -97,7 +99,7 @@ class asio_sender : private ana::detail::sender
 
          bool _sending;
          boost::mutex _sender_mutex;
-         std::queue<_send_operation> _send_queue;
+         std::list<_send_operation*> _send_queue;
 };
 
 #endif

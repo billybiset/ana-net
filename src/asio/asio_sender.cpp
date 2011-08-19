@@ -41,6 +41,16 @@ asio_sender::asio_sender() :
 {
 }
 
+asio_sender::~asio_sender()
+{
+    std::list<_send_operation*>::iterator it = _send_queue.begin();
+
+    while ( it != _send_queue.end() )
+    {
+        delete *it;
+    }
+}
+
 asio_sender::_send_operation::_send_operation( ana::detail::shared_buffer buffer ,
                                                tcp::socket&               socket ,
                                                ana::send_handler*         handler,
@@ -107,9 +117,9 @@ void asio_sender::send(ana::detail::shared_buffer buffer ,
         }
         else
         {
-            _send_operation oper(buffer,socket,handler,sender,op_id);
+            _send_operation* oper = new _send_operation(buffer,socket,handler,sender,op_id);
 
-            _send_queue.push( oper );
+            _send_queue.push_back( oper );
         }
     }
     catch(std::exception& e)
@@ -213,14 +223,15 @@ void asio_sender::handle_send(const ana::error_code& ec,
 
     if ( should_send_from_queue )
     {
-        _send_operation oper = _send_queue.front();
+        _send_operation* oper = _send_queue.front();
 
         {
             boost::mutex::scoped_lock glock( _sender_mutex );
-            _send_queue.pop();
+            _send_queue.pop_front();
         }
 
-        send( oper.buffer, oper.socket, oper.handler, oper.sender, oper.op_id);
+        send( oper->buffer, oper->socket, oper->handler, oper->sender, oper->op_id);
+        delete oper;
     }
 }
 

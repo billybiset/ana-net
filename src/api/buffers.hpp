@@ -140,7 +140,7 @@ namespace ana
                 {
                     if (copy_buffer)
                     {
-                        base_ = std::malloc( size_ );
+                        base_ = new char[size_];
                         std::memcpy(base_, boost::asio::detail::buffer_cast_helper(buffer), size_);
                     }
                     else
