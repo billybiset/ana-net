@@ -34,6 +34,7 @@
 
 #include "asio_sender.hpp"
 
+
 asio_sender::asio_sender() :
     _sending( false ),
     _sender_mutex(),

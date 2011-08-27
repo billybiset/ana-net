@@ -195,7 +195,7 @@ namespace ana
     class stats_collector
     {
         public:
-            stats_collector() :
+            stats_collector() : 
                 io_service_(),
                 collector_thread_( NULL ),
                 accumulator_( 0, io_service_),
@@ -215,7 +215,8 @@ namespace ana
                 collector_thread_ = new boost::thread( boost::bind(&boost::asio::io_service::run,
                                                                    &io_service_) );
             }
-
+            
+            
             const stats* get_stats( stat_type type ) const
             {
                 switch (type)
@@ -296,6 +297,32 @@ namespace ana
             }
 
         private:
+        
+            stats_collector(const stats_collector& other) :
+            
+                io_service_(),
+                collector_thread_( NULL ),
+                accumulator_( 0, io_service_),
+                seconds_stats_( time::seconds(1), io_service_ ),
+                minutes_stats_( time::minutes(1), io_service_ ),
+                hours_stats_( time::hours(1), io_service_ ),
+                days_stats_( time::days(1), io_service_ ),
+                current_packet_in_size_(0),
+                current_packet_out_size_(0),
+                current_packet_in_(0),
+                current_packet_out_(0),
+                current_packet_in_max_(0),
+                current_packet_out_max_(0),
+                current_packet_in_total_(0),
+                current_packet_out_total_(0)
+            {
+            }
+            
+            stats_collector& operator=(const stats_collector& other)
+            {
+                return *this;
+            }
+        
             void log_current_packet_in(size_t size,bool finished_packet)
             {
                 if (finished_packet)
