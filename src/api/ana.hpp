@@ -248,7 +248,7 @@ namespace ana
         /**
          * Base class for any network entity that handles incoming messages.
          */
-        class listener : public virtual network_stats_logger,
+        class listener : public network_stats_logger,
                          public virtual ana_component
         {
             public:
@@ -343,7 +343,7 @@ namespace ana
      * A network server. An object of this type can handle several connected clients.
      */
     struct server : public virtual detail::listener,
-                    public virtual detail::sender
+                    public detail::sender
     {
         /**
          * Creates an ana server.

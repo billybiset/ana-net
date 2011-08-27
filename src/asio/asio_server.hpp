@@ -56,7 +56,7 @@ class asio_server : public  ana::server,
                     private asio_proxy_manager
 {
     private:
-        class asio_client_proxy : public virtual ana::server::client_proxy,
+        class asio_client_proxy : public ana::server::client_proxy,
                                   public asio_listener,
                                   private asio_sender
         {
