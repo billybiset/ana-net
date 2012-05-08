@@ -70,6 +70,7 @@ asio_client::~asio_client()
     while (it != io_threads_.end())
     {
         (*it)->join();
+        delete *it;
         it = io_threads_.erase( it );
     }
 }
